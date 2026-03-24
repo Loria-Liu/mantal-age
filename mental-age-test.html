@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>心理年龄测试</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep: #0a0a12;
+  --bg-card: rgba(255,255,255,0.04);
+  --border-glass: rgba(255,255,255,0.08);
+  --text-primary: #e8e4df;
+  --text-secondary: rgba(255,255,255,0.5);
+  --accent-warm: #e8a87c;
+  --accent-cool: #7eb8c9;
+  --accent-rose: #c98b8b;
+  --accent-gold: #d4b483;
+  --glow-warm: rgba(232,168,124,0.15);
+  --glow-cool: rgba(126,184,201,0.12);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Noto Sans SC', sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ambient background */
+.ambient {
+  position: fixed; inset:0; z-index:0; pointer-events:none;
+  overflow:hidden;
+}
+.ambient .orb {
+  position: absolute; border-radius: 50%; filter: blur(80px);
+  animation: float 20s ease-in-out infinite;
+}
+.ambient .orb:nth-child(1) {
+  width:400px; height:400px; top:-10%; left:-10%;
+  background: radial-gradient(circle, rgba(126,184,201,0.12), transparent 70%);
+}
+.ambient .orb:nth-child(2) {
+  width:500px; height:500px; bottom:-15%; right:-10%;
+  background: radial-gradient(circle, rgba(232,168,124,0.1), transparent 70%);
+  animation-delay: -7s;
+}
+.ambient .orb:nth-child(3) {
+  width:300px; height:300px; top:40%; left:50%;
+  background: radial-gradient(circle, rgba(201,139,139,0.08), transparent 70%);
+  animation-delay: -14s;
+}
+
+@keyframes float {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33% { transform: translate(30px,-40px) scale(1.1); }
+  66% { transform: translate(-20px,30px) scale(0.95); }
+}
+
+/* Container */
+.container {
+  position: relative; z-index:1;
+  max-width: 480px; margin: 0 auto;
+  padding: 20px 20px 40px;
+  min-height: 100vh;
+}
+
+/* Screens */
+.screen { display:none; }
+.screen.active { display:block; animation: fadeUp 0.6s ease-out; }
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(24px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+/* ===== INTRO ===== */
+.intro { text-align:center; padding-top: 15vh; }
+
+.intro .label {
+  display: inline-block;
+  font-size: 11px; letter-spacing: 4px; text-transform: uppercase;
+  color: var(--accent-cool);
+  border: 1px solid rgba(126,184,201,0.3);
+  padding: 6px 16px; border-radius: 100px;
+  margin-bottom: 32px;
+  font-family: 'Noto Sans SC';
+}
+
+.intro h1 {
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 900; font-size: 42px;
+  line-height: 1.3; margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-warm) 50%, var(--accent-cool) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.intro .subtitle {
+  font-size: 15px; color: var(--text-secondary);
+  line-height: 1.8; margin-bottom: 48px;
+  font-weight: 300;
+}
+
+.btn-start {
+  display: inline-flex; align-items:center; gap:10px;
+  background: linear-gradient(135deg, var(--accent-warm), var(--accent-rose));
+  color: #fff; border:none; border-radius:100px;
+  padding: 16px 48px; font-size:16px; font-weight:500;
+  cursor:pointer; transition: all 0.4s ease;
+  font-family: 'Noto Sans SC';
+  box-shadow: 0 8px 32px rgba(232,168,124,0.25);
+  position:relative; overflow:hidden;
+}
+.btn-start::before {
+  content:''; position:absolute; inset:0;
+  background: linear-gradient(135deg, transparent, rgba(255,255,255,0.15));
+  opacity:0; transition: opacity 0.3s;
+}
+.btn-start:hover { transform:translateY(-2px); box-shadow: 0 12px 40px rgba(232,168,124,0.35); }
+.btn-start:hover::before { opacity:1; }
+.btn-start:active { transform:scale(0.97); }
+
+.btn-start .arrow {
+  display:inline-block; transition: transform 0.3s;
+}
+.btn-start:hover .arrow { transform:translateX(4px); }
+
+.intro .note {
+  margin-top: 24px; font-size: 12px; color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+/* ===== QUIZ ===== */
+.progress-wrap {
+  margin-bottom: 32px; padding-top: 20px;
+}
+.progress-info {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom: 10px;
+}
+.progress-info .num {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px; color: var(--accent-warm);
+  font-weight: 600;
+}
+.progress-info .total {
+  font-size: 12px; color: var(--text-secondary);
+}
+.progress-bar {
+  height: 3px; background: var(--border-glass); border-radius: 10px;
+  overflow:hidden;
+}
+.progress-fill {
+  height:100%; border-radius:10px;
+  background: linear-gradient(90deg, var(--accent-warm), var(--accent-cool));
+  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+
+.question-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 20px;
+  padding: 32px 24px;
+  backdrop-filter: blur(20px);
+  margin-bottom: 24px;
+}
+
+.question-card .q-label {
+  font-size: 11px; color: var(--accent-cool);
+  letter-spacing: 2px; margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+.question-card h2 {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 20px; font-weight: 600;
+  line-height: 1.6; color: var(--text-primary);
+}
+
+.options {
+  display:flex; flex-direction:column; gap:12px;
+}
+
+.option-btn {
+  display:block; width:100%; text-align:left;
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 14px;
+  padding: 18px 20px;
+  color: var(--text-primary);
+  font-size: 15px; line-height: 1.5;
+  cursor:pointer; transition: all 0.3s ease;
+  font-family: 'Noto Sans SC';
+  position:relative; overflow:hidden;
+}
+.option-btn::before {
+  content:''; position:absolute; inset:0;
+  background: linear-gradient(135deg, var(--glow-warm), var(--glow-cool));
+  opacity:0; transition:opacity 0.3s;
+}
+.option-btn:hover {
+  border-color: rgba(232,168,124,0.3);
+  transform: translateX(4px);
+}
+.option-btn:hover::before { opacity:1; }
+.option-btn:active { transform:scale(0.98); }
+
+.option-btn .opt-letter {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:24px; height:24px; border-radius:50%;
+  background: rgba(255,255,255,0.06);
+  font-size:12px; font-weight:600; margin-right:12px;
+  color: var(--accent-warm);
+  flex-shrink:0; position:relative; z-index:1;
+}
+.option-btn .opt-text { position:relative; z-index:1; }
+
+.option-btn.selected {
+  border-color: var(--accent-warm);
+  background: rgba(232,168,124,0.08);
+}
+.option-btn.selected .opt-letter {
+  background: var(--accent-warm); color: var(--bg-deep);
+}
+
+/* ===== RESULT ===== */
+.result { text-align:center; padding-top: 8vh; }
+
+.result-badge {
+  display:inline-block;
+  font-size: 11px; letter-spacing: 3px;
+  color: var(--accent-gold);
+  border: 1px solid rgba(212,180,131,0.3);
+  padding: 6px 20px; border-radius: 100px;
+  margin-bottom: 28px;
+}
+
+.result-age-wrap {
+  margin-bottom: 8px;
+}
+
+.result-age {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 96px; font-weight: 900;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--accent-warm), var(--accent-gold), var(--accent-cool));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline-block;
+  animation: breathe 3s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%,100% { filter: brightness(1); }
+  50% { filter: brightness(1.15); }
+}
+
+.result-unit {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 20px; color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+.result-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 20px;
+  padding: 28px 24px;
+  backdrop-filter: blur(20px);
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.result-card .rc-title {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 17px; font-weight: 600;
+  color: var(--accent-warm);
+  margin-bottom: 12px;
+}
+
+.result-card .rc-desc {
+  font-size: 14px; line-height: 1.9;
+  color: var(--text-secondary);
+  font-weight: 300;
+}
+
+/* Trait bars */
+.trait-bars { margin-top: 20px; }
+.trait-item {
+  margin-bottom: 16px;
+}
+.trait-label {
+  display:flex; justify-content:space-between;
+  font-size: 13px; margin-bottom: 6px;
+}
+.trait-label span:first-child { color: var(--text-primary); }
+.trait-label span:last-child { color: var(--accent-warm); font-weight:600; }
+.trait-bar-bg {
+  height:4px; background: var(--border-glass); border-radius:10px;
+  overflow:hidden;
+}
+.trait-bar-fill {
+  height:100%; border-radius:10px;
+  background: linear-gradient(90deg, var(--accent-warm), var(--accent-cool));
+  width:0; transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+.result-footer {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-glass);
+}
+
+.btn-restart {
+  display:inline-flex; align-items:center; gap:8px;
+  background: transparent;
+  border: 1px solid var(--border-glass);
+  color: var(--text-secondary);
+  border-radius: 100px;
+  padding: 12px 32px; font-size:14px;
+  cursor:pointer; transition: all 0.3s;
+  font-family: 'Noto Sans SC';
+}
+.btn-restart:hover {
+  border-color: var(--accent-warm);
+  color: var(--accent-warm);
+}
+
+.watermark {
+  margin-top: 24px;
+  font-size: 11px; color: var(--text-secondary);
+  opacity:0.4; letter-spacing: 1px;
+}
+
+/* Share hint */
+.share-hint {
+  margin-top: 16px;
+  display: inline-flex; align-items:center; gap:6px;
+  font-size: 12px; color: var(--accent-gold);
+  opacity: 0.7;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity:0.5; }
+  50% { opacity:1; }
+}
+</style>
+</head>
+<body>
+
+<div class="ambient">
+  <div class="orb"></div>
+  <div class="orb"></div>
+  <div class="orb"></div>
+</div>
+
+<div class="container">
+  <!-- INTRO -->
+  <div class="screen active" id="intro">
+    <div class="intro">
+      <div class="label">Psychological Age</div>
+      <h1>你的心理年龄<br>是几岁？</h1>
+      <p class="subtitle">
+        15道精选问题，探索你内心真实的年龄<br>
+        也许它和你想的完全不一样
+      </p>
+      <button class="btn-start" onclick="startQuiz()">
+        开始测试 <span class="arrow">→</span>
+      </button>
+      <p class="note">约2分钟 · 仅供娱乐参考</p>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="screen" id="quiz">
+    <div class="progress-wrap">
+      <div class="progress-info">
+        <span class="num" id="qNum">01 / 15</span>
+        <span class="total" id="qPercent">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="question-card">
+      <div class="q-label" id="qCategory">情境选择</div>
+      <h2 id="qText"></h2>
+    </div>
+    <div class="options" id="optionsWrap"></div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="result">
+    <div class="result">
+      <div class="result-badge">✦ 你的心理年龄 ✦</div>
+      <div class="result-age-wrap">
+        <span class="result-age" id="resultAge">0</span>
+      </div>
+      <div class="result-unit">岁</div>
+
+      <div class="result-card">
+        <div class="rc-title" id="resultTitle"></div>
+        <div class="rc-desc" id="resultDesc"></div>
+      </div>
+
+      <div class="result-card">
+        <div class="rc-title">你的内心特质</div>
+        <div class="trait-bars" id="traitBars"></div>
+      </div>
+
+      <div class="result-footer">
+        <div class="share-hint">📸 截图分享给朋友一起测</div>
+        <br><br>
+        <button class="btn-restart" onclick="restart()">↻ 重新测试</button>
+        <div class="watermark">心理年龄测试 · Mental Age Test</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    cat: "生活态度",
+    q: "周末早上醒来，你的第一反应是？",
+    opts: [
+      { t: "太好了！今天要去探索新地方", s: [2,3,1,2] },
+      { t: "刷一会儿手机再说吧", s: [1,1,2,1] },
+      { t: "终于可以好好休息了", s: [3,2,2,3] },
+      { t: "想想这周还有什么待办事项", s: [4,2,3,3] }
+    ]
+  },
+  {
+    cat: "社交风格",
+    q: "朋友突然约你去一个陌生人很多的聚会，你会？",
+    opts: [
+      { t: "立刻答应，认识新朋友多好", s: [1,3,1,1] },
+      { t: "犹豫一下，但还是去了", s: [2,2,2,2] },
+      { t: "婉拒，更想和熟人待在一起", s: [3,1,3,3] },
+      { t: "看看去的人有没有值得认识的", s: [4,2,4,2] }
+    ]
+  },
+  {
+    cat: "情感态度",
+    q: "看到一对老夫妻在公园散步，你心里想的是？",
+    opts: [
+      { t: "好浪漫啊，真让人羡慕", s: [1,3,1,2] },
+      { t: "希望我老了也能这样", s: [2,3,2,2] },
+      { t: "平淡才是真，挺好的", s: [3,2,3,4] },
+      { t: "拍张照发朋友圈", s: [1,2,1,1] }
+    ]
+  },
+  {
+    cat: "消费观念",
+    q: "你更倾向于把钱花在？",
+    opts: [
+      { t: "旅行、演出等体验类消费", s: [2,3,1,1] },
+      { t: "好看的衣服和电子产品", s: [1,2,1,1] },
+      { t: "提升自己的课程和书籍", s: [3,2,3,3] },
+      { t: "存起来以备不时之需", s: [4,1,4,4] }
+    ]
+  },
+  {
+    cat: "面对冲突",
+    q: "和朋友发生了分歧，你通常会？",
+    opts: [
+      { t: "直接说出来，吵完就好了", s: [1,3,1,1] },
+      { t: "先冷静一下再谈", s: [3,2,3,3] },
+      { t: "算了，没必要争", s: [4,1,4,4] },
+      { t: "在心里分析到底谁对谁错", s: [3,1,3,2] }
+    ]
+  },
+  {
+    cat: "人生选择",
+    q: "如果可以重新选择，你会选哪种生活？",
+    opts: [
+      { t: "到处旅行的自由职业者", s: [1,4,1,1] },
+      { t: "在大公司稳步上升", s: [3,2,3,3] },
+      { t: "开一家自己的小店", s: [2,3,2,2] },
+      { t: "隐居在山里种花养猫", s: [4,2,2,4] }
+    ]
+  },
+  {
+    cat: "思维方式",
+    q: "你对「计划赶不上变化」这句话的态度是？",
+    opts: [
+      { t: "所以干脆不做计划", s: [1,3,1,1] },
+      { t: "计划还是要做，灵活调整就好", s: [3,3,3,3] },
+      { t: "说明计划做得不够周全", s: [4,1,4,3] },
+      { t: "变化本身就是乐趣所在", s: [2,4,1,1] }
+    ]
+  },
+  {
+    cat: "自我认知",
+    q: "深夜睡不着的时候，你最常想什么？",
+    opts: [
+      { t: "明天要做的事", s: [3,1,3,2] },
+      { t: "过去某个后悔的决定", s: [3,1,2,3] },
+      { t: "天马行空的幻想", s: [1,4,1,1] },
+      { t: "人生的意义之类的大问题", s: [2,2,2,4] }
+    ]
+  },
+  {
+    cat: "审美偏好",
+    q: "以下哪种风格最吸引你？",
+    opts: [
+      { t: "色彩鲜艳、充满活力的波普风", s: [1,4,1,1] },
+      { t: "简约干净的日式侘寂", s: [3,2,3,4] },
+      { t: "温暖复古的法式浪漫", s: [2,3,2,2] },
+      { t: "高级冷淡的极简主义", s: [4,2,4,3] }
+    ]
+  },
+  {
+    cat: "面对失败",
+    q: "如果一个重要的计划失败了，你会？",
+    opts: [
+      { t: "大哭一场然后重新开始", s: [1,3,1,2] },
+      { t: "复盘总结经验教训", s: [3,2,4,3] },
+      { t: "可能会消沉一段时间", s: [2,1,2,2] },
+      { t: "早就做好了失败的心理准备", s: [4,2,3,4] }
+    ]
+  },
+  {
+    cat: "时间感知",
+    q: "对你来说，五年后感觉有多远？",
+    opts: [
+      { t: "太遥远了，想不了那么多", s: [1,3,1,1] },
+      { t: "不远，转眼就到", s: [4,2,3,4] },
+      { t: "刚好够完成一些重要目标", s: [3,2,3,3] },
+      { t: "说不准，谁知道会发生什么", s: [2,3,2,2] }
+    ]
+  },
+  {
+    cat: "社交需求",
+    q: "理想的朋友圈大小是？",
+    opts: [
+      { t: "越多越好，热闹才开心", s: [1,4,1,1] },
+      { t: "一群玩得来的就够了", s: [2,3,2,2] },
+      { t: "三五知己足矣", s: [3,2,3,3] },
+      { t: "有一两个真正懂我的人就好", s: [4,1,4,4] }
+    ]
+  },
+  {
+    cat: "对待规则",
+    q: "遇到一条你觉得不合理的规则，你会？",
+    opts: [
+      { t: "直接无视", s: [1,3,1,1] },
+      { t: "先遵守，再想办法改变", s: [3,2,4,3] },
+      { t: "抱怨但还是遵守", s: [2,1,2,2] },
+      { t: "绕过规则找到替代方案", s: [3,3,3,2] }
+    ]
+  },
+  {
+    cat: "情绪管理",
+    q: "当你感到压力很大时，你最可能？",
+    opts: [
+      { t: "找人倾诉或者大吃一顿", s: [1,3,1,1] },
+      { t: "一个人安静待着消化", s: [3,1,3,3] },
+      { t: "运动或者做点手工转移注意力", s: [2,3,2,2] },
+      { t: "分析压力来源，逐个解决", s: [4,2,4,3] }
+    ]
+  },
+  {
+    cat: "价值排序",
+    q: "如果只能选一个，你最看重？",
+    opts: [
+      { t: "自由——不被任何事物束缚", s: [1,4,1,1] },
+      { t: "成长——不断突破自己的边界", s: [2,3,3,2] },
+      { t: "连接——与在乎的人深度相伴", s: [3,2,2,3] },
+      { t: "平静——内心的安定与从容", s: [4,1,4,4] }
+    ]
+  }
+];
+
+// scores: [maturity, vitality, independence, depth]
+let currentQ = 0;
+let scores = [0,0,0,0];
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startQuiz() {
+  currentQ = 0;
+  scores = [0,0,0,0];
+  showScreen('quiz');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = questions[currentQ];
+  const n = currentQ + 1;
+  document.getElementById('qNum').textContent = String(n).padStart(2,'0') + ' / 15';
+  document.getElementById('qPercent').textContent = Math.round(n/15*100) + '%';
+  document.getElementById('progressFill').style.width = (n/15*100) + '%';
+  document.getElementById('qCategory').textContent = q.cat;
+  document.getElementById('qText').textContent = q.q;
+
+  const wrap = document.getElementById('optionsWrap');
+  wrap.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span><span class="opt-text">${opt.t}</span>`;
+    btn.onclick = () => selectOption(i);
+    wrap.appendChild(btn);
+  });
+}
+
+function selectOption(idx) {
+  const q = questions[currentQ];
+  const s = q.opts[idx].s;
+  scores[0] += s[0];
+  scores[1] += s[1];
+  scores[2] += s[2];
+  scores[3] += s[3];
+
+  // highlight
+  const btns = document.querySelectorAll('.option-btn');
+  btns.forEach(b => b.classList.remove('selected'));
+  btns[idx].classList.add('selected');
+
+  setTimeout(() => {
+    currentQ++;
+    if (currentQ < questions.length) {
+      const quizDiv = document.getElementById('quiz');
+      quizDiv.querySelector('.question-card').style.animation = 'none';
+      quizDiv.querySelector('.question-card').offsetHeight;
+      quizDiv.querySelector('.question-card').style.animation = 'fadeUp 0.4s ease-out';
+      renderQuestion();
+    } else {
+      showResult();
+    }
+  }, 350);
+}
+
+function showResult() {
+  showScreen('result');
+
+  const maturity = scores[0];   // 15-60 range
+  const vitality = scores[1];
+  const independence = scores[2];
+  const depth = scores[3];
+
+  // Calculate mental age (15~70 range)
+  // Higher maturity = older, higher vitality = younger
+  const raw = (maturity / 60) * 50 + 15 - (vitality / 60) * 15 + (depth / 60) * 10;
+  let age = Math.round(Math.max(15, Math.min(70, raw)));
+
+  // Animate age counter
+  const ageEl = document.getElementById('resultAge');
+  let counter = 0;
+  const step = Math.max(1, Math.floor(age / 30));
+  const timer = setInterval(() => {
+    counter += step;
+    if (counter >= age) { counter = age; clearInterval(timer); }
+    ageEl.textContent = counter;
+  }, 40);
+
+  // Result profile
+  const profiles = [
+    { min:15, max:22, title:"少年心气 · 永远的冒险家", desc:"你的内心住着一个对世界充满好奇的少年。你热爱新鲜事物，不惧未知，总觉得最好的还在前方。你的感染力很强，但有时可能需要多一些耐心和沉淀。" },
+    { min:23, max:30, title:"青春正盛 · 热烈的理想主义者", desc:"你的内心正值最鲜活的年纪。既有对梦想的执着追求，也开始懂得现实的分量。你善于在理想与现实间找到平衡，这种状态让你充满独特的魅力。" },
+    { min:31, max:40, title:"从容而立 · 清醒的行动派", desc:"你的内心已经穿越了许多迷茫，进入了清醒的状态。你知道自己要什么，也知道什么不值得在意。这种成熟不是世故，而是一种通透的自我认知。" },
+    { min:41, max:52, title:"沉稳如山 · 温柔的智者", desc:"你的内心有超越年龄的深度和厚度。你看人看事有着独到的洞察力，面对风浪也能保持内心的平静。你像一本耐读的书，需要时间才能品出其中的好。" },
+    { min:53, max:70, title:"返璞归真 · 自在的修行者", desc:"你的内心已经经历了一场完整的旅行，回到了最本真的状态。你不再追逐外界的认可，而是专注于内心的丰盈。这种境界，是很多人一辈子都到不了的地方。" }
+  ];
+
+  const profile = profiles.find(p => age >= p.min && age <= p.max) || profiles[2];
+  document.getElementById('resultTitle').textContent = profile.title;
+  document.getElementById('resultDesc').textContent = profile.desc;
+
+  // Trait bars
+  const traits = [
+    { name: "成熟度", val: Math.round(maturity/60*100) },
+    { name: "活力值", val: Math.round(vitality/60*100) },
+    { name: "独立性", val: Math.round(independence/60*100) },
+    { name: "思想深度", val: Math.round(depth/60*100) }
+  ];
+
+  const barsWrap = document.getElementById('traitBars');
+  barsWrap.innerHTML = '';
+  traits.forEach((tr, i) => {
+    const item = document.createElement('div');
+    item.className = 'trait-item';
+    item.innerHTML = `
+      <div class="trait-label"><span>${tr.name}</span><span>${tr.val}%</span></div>
+      <div class="trait-bar-bg"><div class="trait-bar-fill" id="bar${i}"></div></div>
+    `;
+    barsWrap.appendChild(item);
+    setTimeout(() => {
+      document.getElementById('bar'+i).style.width = tr.val + '%';
+    }, 400 + i*200);
+  });
+}
+
+function restart() {
+  showScreen('intro');
+}
+</script>
+</body>
+</html>
